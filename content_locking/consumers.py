@@ -4,6 +4,12 @@ from django.utils.text import slugify
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 
+# This module-level variable will store user-presence data. It will contain
+# keys that are slugs of a given url, e.g. if a user is on
+# /admin/pages/12/edit, the dict will have a key {'adminpages12edit': []}, and
+# its corresponding array will list the users currently in that page. The user
+# at index [0] will be the first user in the story. Users are added on
+# connect() and removed on disconnect().
 people_here = {}
 
 

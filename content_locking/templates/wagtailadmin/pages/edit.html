@@ -27,7 +27,7 @@
 
 {% block end_of_body_js %}
   <div id="presence_alert">
-    <div v-if="conflicts.length" class="content-conflict-alert">
+    <div v-if="conflicts.length" class="content-conflict-alert" v-cloak>
       <p v-for="user in conflicts" style="margin: 0">
         {% verbatim %}
         The user {{user}} is also editing this article. <a v-if="locked" @click="unlock" style="cursor: pointer"><b>Unlock.</b></a>
@@ -40,11 +40,12 @@
   new Vue({
     el: "#presence_alert",
     data: {
-      socket: null,
       current_user: null,
-      users_present: [],
-      locked: null,
       forceUnlocked: false,
+      isOriginalUser: true,
+      locked: false,
+      socket: null,
+      users_present: [],
     },
 
     methods: {
@@ -56,14 +57,15 @@
     mounted: function() {
       var path = window.location.pathname;
       this.socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/chat/p" + path
+        "ws://" + window.location.host + "/ws/content_editing" + path
       );
       this.socket.onmessage = e => {
         var data = JSON.parse(e.data);
-        this.users_present = data.people_here;
+        this.users_present = [...data.people_here];
         this.current_user = data.current_user;
       }
 
+      this.isOriginalUser = users.indexOf(this.current_user) < 1;
       // Start page locked, but immediately unlock if only user (see
       // `isOriginalUser` watch method)
       if (!this.isOriginalUser) {
@@ -74,20 +76,13 @@
     computed: {
       conflicts: function() {
         return this.users_present.filter(x => x != this.current_user)
-      },
-      isOriginalUser: function() {
-        return this.users_present.indexOf(this.current_user) === 0;
       }
     },
 
     watch: {
-
-      // isOriginalUser set to true if they were the first user in a given
-      // story (e.g. they have the right to edit that story)
-      isOriginalUser: function(val) {
-        if (this.isOriginalUser) {
-          this.locked = false;
-        }
+      users_present: function(users) {
+        this.isOriginalUser = users.indexOf(this.current_user) < 1;
+        this.locked = this.isOriginalUser ? false : true;
       },
 
       // Identifies if the edit body is grey/inaccessible
