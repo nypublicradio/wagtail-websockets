@@ -30,7 +30,7 @@
     <div v-if="conflicts.length" class="content-conflict-alert">
       <p v-for="user in conflicts" style="margin: 0">
         {% verbatim %}
-        The user {{user}} is also editing this article. <a v-if="locked" @click="locked = false" style="cursor: pointer"><b>Unlock.</b></a>
+        The user {{user}} is also editing this article. <a v-if="locked" @click="unlock" style="cursor: pointer"><b>Unlock.</b></a>
         {% endverbatim %}
       </p>
     </div>
@@ -44,7 +44,15 @@
       current_user: null,
       users_present: [],
       locked: null,
+      forceUnlocked: false,
     },
+
+    methods: {
+      unlock: function() {
+        this.locked = false;
+      }
+    },
+
     mounted: function() {
       var path = window.location.pathname;
       this.socket = new WebSocket(
@@ -61,8 +69,8 @@
       if (!this.isOriginalUser) {
         this.locked = true;
       }
-
     },
+
     computed: {
       conflicts: function() {
         return this.users_present.filter(x => x != this.current_user)
@@ -71,12 +79,18 @@
         return this.users_present.indexOf(this.current_user) === 0;
       }
     },
+
     watch: {
+
+      // isOriginalUser set to true if they were the first user in a given
+      // story (e.g. they have the right to edit that story)
       isOriginalUser: function(val) {
         if (this.isOriginalUser) {
           this.locked = false;
         }
       },
+
+      // Identifies if the edit body is grey/inaccessible
       locked: function(locked) {
         if (locked) {
           ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
