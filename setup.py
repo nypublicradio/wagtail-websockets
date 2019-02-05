@@ -15,6 +15,10 @@ setup(
     license='BSD License',  # example license
     description='Wagtail integration with Django Channels',
     long_description=README,
+    install_requires=[
+        'channels',
+        'channels_redis'
+    ],
     classifiers=[
         'Environment :: Web Environment',
         'Framework :: Django',

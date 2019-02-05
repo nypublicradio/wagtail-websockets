@@ -7,7 +7,12 @@ authors = ["Michael Hearn <git@mikehearn.net>"]
 [tool.poetry.dependencies]
 python = "^3.7"
 channels = "^2.1"
+django = "^2.1"
+channels_redis = "^2.3"
 
+
+[tool.poetry.dev-dependencies]
+python-language-server = {version = "^0.22.0",extras = ["all"]}
 [build-system]
 requires = ["poetry>=0.12", "setuptools", "wheel"]
 build-backend = "poetry.masonry.api"
