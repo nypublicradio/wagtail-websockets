@@ -10,7 +10,7 @@
   <div v-if="conflicts.length" v-bind:style="styleAlert">
     <p v-for="user in conflicts" style="margin: 0">
       {% verbatim %}
-      The user {{user}} is also editing this article.
+      The user {{user}} is also editing this article. <a v-if="locked" @click="locked = false" style="cursor: pointer"><b>Unlock.</b></a>
       {% endverbatim %}
     </p>
   </div>
@@ -23,6 +23,7 @@
       socket: null,
       current_user: null,
       users_present: [],
+      locked: null,
       styleAlert: {
         position: "fixed",
         top: "0",
@@ -34,7 +35,8 @@
         padding: "10px 30px",
         marginTop: "10px",
         boxShadow: "rgba(0,0,0,0.3) 0px 0px 10px",
-        borderRadius: "2px"
+        borderRadius: "2px",
+        textAlign: "center"
       }
     },
     mounted: function() {
@@ -47,10 +49,40 @@
         this.users_present = data.people_here;
         this.current_user = data.current_user;
       }
+
+      // Start page locked, but immediately unlock if only user (see
+      // `isOriginalUser` watch method)
+      if (!this.isOriginalUser) {
+        this.locked = true;
+      }
+
     },
     computed: {
       conflicts: function() {
         return this.users_present.filter(x => x != this.current_user)
+      },
+      isOriginalUser: function() {
+        return this.users_present.indexOf(this.current_user) === 0;
+      }
+    },
+    watch: {
+      isOriginalUser: function(val) {
+        if (this.isOriginalUser) {
+          this.locked = false;
+        }
+      },
+      locked: function(locked) {
+        if (locked) {
+          ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
+            document.querySelector(el).style['opacity'] = 0.3;
+            document.querySelector(el).style['pointer-events'] = 'none';
+          });
+        } else {
+          ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
+            document.querySelector(el).style['opacity'] = 1;
+            document.querySelector(el).style['pointer-events'] = 'auto';
+          });
+        }
       }
     }
   })
