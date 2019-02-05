@@ -17,6 +17,8 @@
     border-radius: 2px;
     text-align: center;
   }
+
+  [v-cloak] {display: none}
   </style>
 {% endblock %}
 
@@ -30,76 +32,76 @@
     <div v-if="conflicts.length" class="content-conflict-alert" v-cloak>
       <p v-for="user in conflicts" style="margin: 0">
         {% verbatim %}
-        The user {{user}} is also editing this article. <a v-if="locked" @click="unlock" style="cursor: pointer"><b>Unlock.</b></a>
+        The user <b>{{user}}</b> is also editing this article. <a v-if="locked" @click="unlock" style="cursor: pointer"><b>Unlock.</b></a>
         {% endverbatim %}
       </p>
     </div>
   </div>
 
-<script type="text/javascript">
-  new Vue({
-    el: "#presence_alert",
-    data: {
-      current_user: null,
-      forceUnlocked: false,
-      isOriginalUser: true,
-      locked: false,
-      socket: null,
-      users_present: [],
-    },
-
-    methods: {
-      unlock: function() {
-        this.locked = false;
-      }
-    },
-
-    mounted: function() {
-      var path = window.location.pathname;
-      this.socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/content_editing" + path
-      );
-      this.socket.onmessage = e => {
-        var data = JSON.parse(e.data);
-        this.users_present = [...data.people_here];
-        this.current_user = data.current_user;
-      }
-
-      this.isOriginalUser = users.indexOf(this.current_user) < 1;
-      // Start page locked, but immediately unlock if only user (see
-      // `isOriginalUser` watch method)
-      if (!this.isOriginalUser) {
-        this.locked = true;
-      }
-    },
-
-    computed: {
-      conflicts: function() {
-        return this.users_present.filter(x => x != this.current_user)
-      }
-    },
-
-    watch: {
-      users_present: function(users) {
-        this.isOriginalUser = users.indexOf(this.current_user) < 1;
-        this.locked = this.isOriginalUser ? false : true;
+  <script type="text/javascript">
+    new Vue({
+      el: "#presence_alert",
+      data: {
+        current_user: null,
+        forceUnlocked: false,
+        isOriginalUser: true,
+        locked: false,
+        socket: null,
+        users_present: [],
       },
 
-      // Identifies if the edit body is grey/inaccessible
-      locked: function(locked) {
-        if (locked) {
-          ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
-            document.querySelector(el).style['opacity'] = 0.3;
-            document.querySelector(el).style['pointer-events'] = 'none';
-          });
-        } else {
-          ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
-            document.querySelector(el).style['opacity'] = 1;
-            document.querySelector(el).style['pointer-events'] = 'auto';
-          });
+      methods: {
+        unlock: function() {
+          this.locked = false;
+        }
+      },
+
+      mounted: function() {
+        var path = window.location.pathname;
+        this.socket = new WebSocket(
+          "ws://" + window.location.host + "/ws/content_editing" + path
+        );
+        this.socket.onmessage = e => {
+          var data = JSON.parse(e.data);
+          this.users_present = [...data.people_here];
+          this.current_user = data.current_user;
+        }
+
+        this.isOriginalUser = users.indexOf(this.current_user) < 1;
+        // Start page locked, but immediately unlock if only user (see
+        // `isOriginalUser` watch method)
+        if (!this.isOriginalUser) {
+          this.locked = true;
+        }
+      },
+
+      computed: {
+        conflicts: function() {
+          return this.users_present.filter(x => x != this.current_user)
+        }
+      },
+
+      watch: {
+        users_present: function(users) {
+          this.isOriginalUser = users.indexOf(this.current_user) < 1;
+          this.locked = this.isOriginalUser ? false : true;
+        },
+
+        // Identifies if the edit body is grey/inaccessible
+        locked: function(locked) {
+          if (locked) {
+            ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
+              document.querySelector(el).style['opacity'] = 0.3;
+              document.querySelector(el).style['pointer-events'] = 'none';
+            });
+          } else {
+            ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
+              document.querySelector(el).style['opacity'] = 1;
+              document.querySelector(el).style['pointer-events'] = 'auto';
+            });
+          }
         }
       }
-    }
-  })
-</script>
+    })
+  </script>
 {% endblock %}
