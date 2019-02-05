@@ -1,20 +1,40 @@
 {% extends "wagtailadmin/pages/edit.html" %}
 
-{% block extra_js %}
+{% block extra_css %}
 {{block.super}}
-<script src="https://cdn.jsdelivr.net/npm/vue@2.5.22/dist/vue.js"></script>
+  <style>
+  .content-conflict-alert {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #e9b04d;
+    color: white;
+    z-index: 10000;
+    padding: 10px 30px;
+    margin-top: 10px;
+    box-shadow: rgba(0,0,0,0.3) 0px 0px 10px;
+    border-radius: 2px;
+    text-align: center;
+  }
+  </style>
+{% endblock %}
+
+{% block extra_js %}
+  {{block.super}}
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.22/dist/vue.js"></script>
 {% endblock %}
 
 {% block end_of_body_js %}
-<div id="presence_alert">
-  <div v-if="conflicts.length" v-bind:style="styleAlert">
-    <p v-for="user in conflicts" style="margin: 0">
-      {% verbatim %}
-      The user {{user}} is also editing this article. <a v-if="locked" @click="locked = false" style="cursor: pointer"><b>Unlock.</b></a>
-      {% endverbatim %}
-    </p>
+  <div id="presence_alert">
+    <div v-if="conflicts.length" class="content-conflict-alert">
+      <p v-for="user in conflicts" style="margin: 0">
+        {% verbatim %}
+        The user {{user}} is also editing this article. <a v-if="locked" @click="locked = false" style="cursor: pointer"><b>Unlock.</b></a>
+        {% endverbatim %}
+      </p>
+    </div>
   </div>
-</div>
 
 <script type="text/javascript">
   new Vue({
@@ -24,20 +44,6 @@
       current_user: null,
       users_present: [],
       locked: null,
-      styleAlert: {
-        position: "fixed",
-        top: "0",
-        left: "50%",
-        transform: "translateX(-50%)",
-        backgroundColor: "#e9b04d",
-        color: "white",
-        zIndex: "10000",
-        padding: "10px 30px",
-        marginTop: "10px",
-        boxShadow: "rgba(0,0,0,0.3) 0px 0px 10px",
-        borderRadius: "2px",
-        textAlign: "center"
-      }
     },
     mounted: function() {
       var path = window.location.pathname;
