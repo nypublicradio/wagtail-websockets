@@ -19,13 +19,18 @@ context of Wagtail, with the first use-case being **content-locking**.
 pip install git+https://github.com/nypublicradio/wagtail-websockets.git
 ```
 
-2. Add the app to your `INSTALLED_APPS`:
+2. Add `channels` and `content_locking` to your `INSTALLED_APPS` **above all
+   the Wagtail imports**:
 
 ```python
 INSTALLED_APPS = [
 	...
-	'content_locking',
+        'channels',
+	'content_locking', # Put this before wagtail apps
 	...
+        'wagtail.contrib.forms',
+        'wagtail.contrib.redirects',
+        ...
 ]
 ```
 
