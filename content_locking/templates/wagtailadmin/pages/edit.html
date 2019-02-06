@@ -67,7 +67,6 @@
           this.current_user = data.current_user;
         }
 
-        this.isOriginalUser = users.indexOf(this.current_user) < 1;
         // Start page locked, but immediately unlock if only user (see
         // `isOriginalUser` watch method)
         if (!this.isOriginalUser) {
