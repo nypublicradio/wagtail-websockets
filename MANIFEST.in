@@ -1,2 +1,2 @@
 include README.md
-recursive-include content_locking/*
+recursive-include content_locking *
