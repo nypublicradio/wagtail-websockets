@@ -8,12 +8,12 @@ with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme:
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
 
 setup(
-    name='wagtail-channels',
+    name='wagtail-websockets',
     version='0.1',
     packages=find_packages(),
     include_package_data=True,
     license='BSD License',  # example license
-    description='Wagtail integration with Django Channels',
+    description='Wagtail admin integration with Django Channels',
     long_description=README,
     install_requires=[
         'channels',
