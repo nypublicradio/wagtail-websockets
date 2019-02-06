@@ -45,5 +45,23 @@ CHANNEL_LAYERS = {
         },
     },
 }
+```
 
+4. Create a file called `routing.py` in your main project folder (e.g. the same
+   folder with urls.py):
+
+```python
+from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter, URLRouter
+from django.urls import path
+
+from content_locking import routing
+
+application = ProtocolTypeRouter(
+    {
+        "websocket": AuthMiddlewareStack(
+            URLRouter(routing.websocket_urlpatterns)
+        )
+    }
+)
 ```
