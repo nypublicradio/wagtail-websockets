@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "wagtail-channels"
+name = "wagtail-websockets"
 version = "0.1.0"
 description = ""
 authors = ["Michael Hearn <git@mikehearn.net>"]
@@ -13,6 +13,3 @@ channels_redis = "^2.3"
 
 [tool.poetry.dev-dependencies]
 python-language-server = {version = "^0.22.0",extras = ["all"]}
-[build-system]
-requires = ["poetry>=0.12", "setuptools", "wheel"]
-build-backend = "poetry.masonry.api"
