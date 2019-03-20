@@ -1,8 +1,8 @@
 import json
 
-from django.utils.text import slugify
-
 from channels.generic.websocket import AsyncWebsocketConsumer
+from django.core.cache import cache
+from django.utils.text import slugify
 
 # This module-level variable will store user-presence data. It will contain
 # keys that are slugs of a given url, e.g. if a user is on
@@ -10,24 +10,23 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 # its corresponding array will list the users currently in that page. The user
 # at index [0] will be the first user in the story. Users are added on
 # connect() and removed on disconnect().
-people_here = {}
-
 
 class PresenceConsumer(AsyncWebsocketConsumer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.people_here = people_here
+        self.room_name = None
+        self.room_group_name = None
+        self.username = None
 
     async def connect(self):
         self.room_name = slugify(self.scope["url_route"]["kwargs"]["room_name"])
         self.room_group_name = "presence_{}".format(self.room_name)
         self.username = self.scope["user"].username
 
-        try:
-            if self.username not in self.people_here[self.room_name]:
-                self.people_here[self.room_name] += [self.username]
-        except KeyError:
-            self.people_here[self.room_name] = [self.username]
+        users_present = cache.get(self.room_name, [])
+        if self.username not in users_present:
+            users_present += [self.username]
+            cache.set(self.room_name, users_present, 7200)
 
         await self.channel_layer.group_add(
             self.room_group_name, self.channel_name
@@ -35,17 +34,19 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "send_users", "users": self.people_here[self.room_name]},
+            {"type": "send_users", "users": users_present},
         )
 
         await self.accept()
 
     async def disconnect(self, code):
-        self.people_here[self.room_name].remove(self.username)
+        users_present = cache.get(self.room_name, [])
+        users_present.remove(self.username)
+        cache.set(self.room_name, users_present, 7200)
 
         await self.channel_layer.group_send(
             self.room_group_name,
-            {"type": "send_users", "users": self.people_here[self.room_name]},
+            {"type": "send_users", "users": users_present},
         )
 
         await self.channel_layer.group_discard(
