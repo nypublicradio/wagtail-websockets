@@ -90,15 +90,13 @@
         // Identifies if the edit body is grey/inaccessible
         locked: function(locked) {
           if (locked) {
-            ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
-              document.querySelector(el).style['opacity'] = 0.3;
-              document.querySelector(el).style['pointer-events'] = 'none';
-            });
+            var el = document.querySelector('.content-wrapper > .content')
+            el.style['opacity'] = 0.3;
+            el.style['pointer-events'] = 'none'
           } else {
-            ['.tab-content', '.tab-nav', 'footer'].forEach(el => {
-              document.querySelector(el).style['opacity'] = 1;
-              document.querySelector(el).style['pointer-events'] = 'auto';
-            });
+            var el = document.querySelector('.content-wrapper > .content')
+            el.style['opacity'] = 1;
+            el.style['pointer-events'] = 'auto'
           }
         }
       }
