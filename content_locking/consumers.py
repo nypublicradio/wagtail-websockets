@@ -24,7 +24,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.username = self.scope["user"].username
 
         try:
-            self.people_here[self.room_name] += [self.username]
+            if self.username not in self.people_here[self.room_name]:
+                self.people_here[self.room_name] += [self.username]
         except KeyError:
             self.people_here[self.room_name] = [self.username]
 
