@@ -16,8 +16,8 @@ setup(
     description='Wagtail admin integration with Django Channels',
     long_description=README,
     install_requires=[
-        'channels',
-        'channels_redis'
+        'channels~=2.2',
+        'channels_redis~=2.4'
     ],
     classifiers=[
         'Environment :: Web Environment',
