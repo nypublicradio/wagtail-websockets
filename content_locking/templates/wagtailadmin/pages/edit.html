@@ -1,8 +1,14 @@
 {% extends "wagtailadmin/pages/edit.html" %}
 
+{% load static %}
+{% static "content_locking/test.js" %}
+
 {% block extra_css %}
 {{block.super}}
   <style>
+  a {
+    cursor: pointer;
+  }
   .content-conflict-alert {
     position: fixed;
     top: 0;
@@ -18,6 +24,10 @@
     text-align: center;
   }
 
+  .content-conflict-alert > p {
+    margin: 0;
+  }
+
   [v-cloak] {display: none}
   </style>
 {% endblock %}
@@ -29,77 +39,43 @@
 
 {% block end_of_body_js %}
   <div id="presence_alert">
-    <div v-if="conflicts.length" class="content-conflict-alert" v-cloak>
-      <p v-for="user in conflicts" style="margin: 0">
+    <div v-if="currentState" class="content-conflict-alert" data-test-conflict-alert v-cloak>
+      <p v-if="currentState == STATE.OWNER_CONFLICT">
         {% verbatim %}
-        The user <b>{{user}}</b> is also editing this article. <a v-if="locked" @click="unlock" style="cursor: pointer"><b>Unlock.</b></a>
+          <template v-for="user in conflicts" style="margin: 0">
+            The user <b>{{user}}</b> is also editing this article.
+          </template>
+        {% endverbatim %}
+      </p>
+      <p v-if="currentState == STATE.OWNER_MULTIPLE_TABS">
+        {% verbatim %}
+          <b>Warning</b>: You may have this article opened in multiple tabs.
+        {% endverbatim %}
+      </p>
+      <p v-else-if="currentState == STATE.INTRUDER_CONFLICT">
+        {% verbatim %}
+          The user <b>{{owner}}</b> is already editing this article. <a v-if="locked" @click="unlock" data-test-unlock-button><b>Unlock.</b></a>
+        {% endverbatim %}
+      </p>
+      <p v-else-if="currentState == STATE.INTRUDER_CONFLICT_CONFIRM">
+        {% verbatim %}
+          This page is currently locked by <b>{{owner}}</b>, are you sure you want to unlock this page? No unsaved changes will be lost. <a @click="forceUnlock" data-test-force-unlock-button><b>Unlock</b></a> <a @click="cancelUnlock"><b>Cancel</b></a>
+        {% endverbatim %}
+      </p>
+      <p v-else-if="currentState == STATE.INTRUDER_CONFLICT_CONFIRM_DIRTY">
+        {% verbatim %}
+          This page is currently locked by <b>{{owner}}</b>, are you sure you want to unlock this page? <b>{{owner}}'s</b> unsaved work will be lost. <a @click="forceUnlock" data-test-force-unlock-button><b>Yes</b></a> <a @click="cancelUnlock"><b>Cancel</b></a>
+        {% endverbatim %}
+      </p>
+      <p v-else-if="currentState == STATE.OWNER_USURPED">
+        {% verbatim %}
+          <b>{{owner}}</b> has unlocked this object. You are no longer able to edit/save.
         {% endverbatim %}
       </p>
     </div>
   </div>
 
   <script type="text/javascript">
-    new Vue({
-      el: "#presence_alert",
-      data: {
-        current_user: null,
-        forceUnlocked: false,
-        isOriginalUser: true,
-        locked: false,
-        socket: null,
-        users_present: [],
-      },
-
-      methods: {
-        unlock: function() {
-          this.locked = false;
-        }
-      },
-
-      mounted: function() {
-        var path = window.location.pathname;
-        var protocol = window.location.protocol == "http:" ? "ws://" : "wss://";
-        this.socket = new WebSocket(
-          protocol + window.location.host + "/ws/content_editing" + path
-        );
-        this.socket.onmessage = e => {
-          var data = JSON.parse(e.data);
-          this.users_present = [...data.people_here];
-          this.current_user = data.current_user;
-        }
-
-        // Start page locked, but immediately unlock if only user (see
-        // `isOriginalUser` watch method)
-        if (!this.isOriginalUser) {
-          this.locked = true;
-        }
-      },
-
-      computed: {
-        conflicts: function() {
-          return this.users_present.filter(x => x != this.current_user)
-        }
-      },
-
-      watch: {
-        users_present: function(users) {
-          this.isOriginalUser = users.indexOf(this.current_user) < 1;
-          this.locked = this.isOriginalUser ? false : true;
-        },
-
-        // Identifies if the edit body is grey/inaccessible
-        locked: function(locked) {
-          if (locked) {
-            var el = document.querySelector('.content-wrapper > .content')
-            el.style['opacity'] = 0.3;
-            el.style['pointer-events'] = 'none'
-          } else {
-            var el = document.querySelector('.content-wrapper > .content')
-            el.style['opacity'] = 1;
-            el.style['pointer-events'] = 'auto'
-          }
-        }
-      }
-    })
+    {% include 'wagtailadmin/pages/content_locking.js' %}
   </script>
 {% endblock %}
