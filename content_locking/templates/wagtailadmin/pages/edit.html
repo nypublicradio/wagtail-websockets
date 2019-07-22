@@ -24,6 +24,15 @@
     text-align: center;
   }
 
+	.content-conflict-alert__danger {
+		background-color: #b4191f;
+	}
+
+	.content-conflict-alert__danger a {
+		color: white;
+		text-decoration: underline;
+	}
+
   .content-conflict-alert > p {
     margin: 0;
   }
@@ -39,11 +48,11 @@
 
 {% block end_of_body_js %}
   <div id="presence_alert">
-    <div v-if="currentState" class="content-conflict-alert" data-test-conflict-alert v-cloak>
+    <div v-if="currentState" v-bind:class="{ 'content-conflict-alert__danger':currentState == STATE.INTRUDER_CONFLICT_CONFIRM_DIRTY }" class="content-conflict-alert" data-test-conflict-alert v-cloak>
       <p v-if="currentState == STATE.OWNER_CONFLICT">
         {% verbatim %}
           <template v-for="user in conflicts" style="margin: 0">
-            The user <b>{{user}}</b> is also editing this article.
+            The user <b>{{user}}</b> is attempting to unlock this article.
           </template>
         {% endverbatim %}
       </p>
@@ -59,12 +68,12 @@
       </p>
       <p v-else-if="currentState == STATE.INTRUDER_CONFLICT_CONFIRM">
         {% verbatim %}
-          This page is currently locked by <b>{{owner}}</b>, are you sure you want to unlock this page? No unsaved changes will be lost. <a @click="forceUnlock" data-test-force-unlock-button><b>Unlock</b></a> <a @click="cancelUnlock"><b>Cancel</b></a>
+					This page is currently locked by <b>{{owner}}</b>, are you sure you want to unlock this page? No unsaved changes will be lost. <a @click="forceUnlock" data-test-force-unlock-button><br><b>Unlock</b></a> or <a @click="cancelUnlock"><b>Cancel</b></a>
         {% endverbatim %}
       </p>
       <p v-else-if="currentState == STATE.INTRUDER_CONFLICT_CONFIRM_DIRTY">
         {% verbatim %}
-          This page is currently locked by <b>{{owner}}</b>, are you sure you want to unlock this page? <b>{{owner}}'s</b> unsaved work will be lost. <a @click="forceUnlock" data-test-force-unlock-button><b>Yes</b></a> <a @click="cancelUnlock"><b>Cancel</b></a>
+					This page is currently locked by <b>{{owner}}</b>, are you sure you want to unlock this page? <b>{{owner}}'s</b> unsaved work will be lost. <a @click="forceUnlock" data-test-force-unlock-button><br/><b>Yes</b></a> or <a @click="cancelUnlock"><b>Cancel</b></a>
         {% endverbatim %}
       </p>
       <p v-else-if="currentState == STATE.OWNER_USURPED">
