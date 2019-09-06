@@ -19,26 +19,33 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.room_group_name = None
         self.username = None
 
+    def user_can_connect(self):
+        return self.scope['user'].is_authenticated and self.scope['user'].has_perm('wagtail.access_admin') and False
+
     async def connect(self):
         """
         Executes when a user connects to the channel (e.g. entering the page)
         """
         self.room_name = slugify(self.scope["url_route"]["kwargs"]["room_name"])
         self.room_group_name = "presence_{}".format(self.room_name)
-        self.username = self.scope["user"].username
 
-        self.add_user_to_lock_list(self.username)
+        if self.user_can_connect():
+            self.username = self.scope["user"].username
 
-        await self.channel_layer.group_add(
-            self.room_group_name, self.channel_name
-        )
+            self.add_user_to_lock_list(self.username)
 
-        await self.channel_layer.group_send(
-            self.room_group_name,
-            {"type": "send_users", "users": self.get_users_from_lock_list()},
-        )
+            await self.channel_layer.group_add(
+                self.room_group_name, self.channel_name
+            )
 
-        await self.accept()
+            await self.channel_layer.group_send(
+                self.room_group_name,
+                {"type": "send_users", "users": self.get_users_from_lock_list()},
+            )
+
+            await self.accept()
+        else:
+            await self.close()
 
     async def disconnect(self, code):
         """
