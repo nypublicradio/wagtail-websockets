@@ -20,7 +20,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.username = None
 
     def user_can_connect(self):
-        return self.scope['user'].is_authenticated and self.scope['user'].has_perm('wagtail.access_admin') and False
+        return self.scope['user'].is_authenticated and self.scope['user'].has_perm('wagtail.access_admin')
 
     async def connect(self):
         """
