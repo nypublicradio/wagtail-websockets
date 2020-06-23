@@ -26,10 +26,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     async def user_can_connect(self):
         user = await get_user(self.scope)
-        logger.debug(dir(user))
-        logger.debug('Username? %s', user.get('username'))
-        logger.debug('Authenticated? %s', user.is_authenticated)
-        logger.debug('Has perms? %s', user.has_perm('wagtail.access_admin'))
+        print(dir(user))
+        print('Username? %s' % user.username)
+        print('Authenticated? %s' % user.is_authenticated)
+        print('Has perms? %s' % user.has_perm('wagtail.access_admin'))
         return user.is_authenticated and user.has_perm('wagtail.access_admin')
 
     async def connect(self):
@@ -39,7 +39,7 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.room_name = slugify(self.scope["url_route"]["kwargs"]["room_name"])
         self.room_group_name = "presence_{}".format(self.room_name)
 
-        if self.user_can_connect():
+        if await self.user_can_connect():
             user = await get_user(self.scope)
             self.username = user.username
 
