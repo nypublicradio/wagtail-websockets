@@ -26,8 +26,6 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     async def user_can_connect(self):
         user = await get_user(self.scope)
-        import ipdb
-        ipdb.set_trace()  # XXX BREAKPOINT
         print(dir(user))
         print('Username? %s' % user.username)
         print('Authenticated? %s' % user.is_authenticated)
