@@ -26,10 +26,14 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     async def user_can_connect(self):
         user = await get_user(self.scope)
+        import ipdb
+        ipdb.set_trace()  # XXX BREAKPOINT
         print(dir(user))
         print('Username? %s' % user.username)
         print('Authenticated? %s' % user.is_authenticated)
         print('Has perms? %s' % user.has_perm('wagtail.access_admin'))
+        print('Type: ' % type(user))
+        print('__str__ ' % user.__str__)
         return user.is_authenticated and user.has_perm('wagtail.access_admin')
 
     async def connect(self):
