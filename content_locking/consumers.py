@@ -1,6 +1,7 @@
 import json
 
 from channels.generic.websocket import AsyncWebsocketConsumer
+from channels.auth import get_user
 from django.core.cache import cache
 from django.utils.text import slugify
 
@@ -19,8 +20,9 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.room_group_name = None
         self.username = None
 
-    def user_can_connect(self):
-        return self.scope['user'].is_authenticated and self.scope['user'].has_perm('wagtail.access_admin')
+    async def user_can_connect(self):
+        user = await get_user(self.scope)
+        return user.is_authenticated and user.has_perm('wagtail.access_admin')
 
     async def connect(self):
         """
@@ -30,7 +32,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         self.room_group_name = "presence_{}".format(self.room_name)
 
         if self.user_can_connect():
-            self.username = self.scope["user"].username
+            user = await get_user(self.scope)
+            self.username = user.username
 
             self.add_user_to_lock_list(self.username)
 
