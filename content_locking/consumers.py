@@ -1,5 +1,9 @@
 import json
 
+import logging
+
+logger = logging.getLogger(__name__)
+
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.auth import get_user
 from django.core.cache import cache
@@ -22,10 +26,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
     async def user_can_connect(self):
         user = await get_user(self.scope)
-        print(dir(user))
-        print('Username? ' + user.get('username'))
-        print(f'Authenticated? {user.is_authenticated}')
-        print(f'Has perms? ' + user.has_perm('wagtail.access_admin'))
+        logger.debug(dir(user))
+        logger.debug('Username? %s', user.get('username'))
+        logger.debug('Authenticated? %s', user.is_authenticated)
+        logger.debug('Has perms? %s', user.has_perm('wagtail.access_admin'))
         return user.is_authenticated and user.has_perm('wagtail.access_admin')
 
     async def connect(self):
