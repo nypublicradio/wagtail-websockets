@@ -30,8 +30,8 @@ class PresenceConsumer(AsyncWebsocketConsumer):
         print('Username? %s' % user.username)
         print('Authenticated? %s' % user.is_authenticated)
         print('Has perms? %s' % user.has_perm('wagtail.access_admin'))
-        print('Type: ' % type(user))
-        print('__str__ ' % user.__str__)
+        print('Type: %s' % type(user))
+        print('__str__ %s' % user.__str__)
         return user.is_authenticated and user.has_perm('wagtail.access_admin')
 
     async def connect(self):
