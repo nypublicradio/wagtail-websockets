@@ -1,13 +1,21 @@
 import json
-
 import logging
+
+from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
+from django.conf import settings
+from django.contrib.auth import (
+    BACKEND_SESSION_KEY,
+    HASH_SESSION_KEY,
+    load_backend,
+)
+from django.contrib.auth.models import AnonymousUser
+from django.core.cache import cache
+from django.utils.crypto import constant_time_compare
+from django.utils.text import slugify
 
 logger = logging.getLogger(__name__)
 
-from channels.generic.websocket import AsyncWebsocketConsumer
-from channels.auth import get_user
-from django.core.cache import cache
-from django.utils.text import slugify
 
 # This module-level variable will store user-presence data. It will contain
 # keys that are slugs of a given url, e.g. if a user is on
@@ -15,6 +23,39 @@ from django.utils.text import slugify
 # its corresponding array will list the users currently in that page. The user
 # at index [0] will be the first user in the story. Users are added on
 # connect() and removed on disconnect().
+
+
+@database_sync_to_async
+def get_user(scope):
+    """
+    Return the user model instance associated with the given scope.
+    If no user is retrieved, return an instance of `AnonymousUser`.
+    """
+    if "session" not in scope:
+        raise ValueError(
+            "Cannot find session in scope. You should wrap your consumer in SessionMiddleware."
+        )
+    session = scope["session"]
+    user = None
+    try:
+        user_id = _get_user_session_key(session)
+        backend_path = session[BACKEND_SESSION_KEY]
+    except KeyError:
+        pass
+    else:
+        if backend_path in settings.AUTHENTICATION_BACKENDS:
+            backend = load_backend(backend_path)
+            user = backend.get_user(user_id)
+            # Verify the session
+            if hasattr(user, "get_session_auth_hash"):
+                session_hash = session.get(HASH_SESSION_KEY)
+                session_hash_verified = session_hash and constant_time_compare(
+                    session_hash, user.get_session_auth_hash()
+                )
+                if not session_hash_verified:
+                    session.flush()
+                    user = None
+    return user or AnonymousUser()
 
 
 class PresenceConsumer(AsyncWebsocketConsumer):
@@ -27,12 +68,12 @@ class PresenceConsumer(AsyncWebsocketConsumer):
     async def user_can_connect(self):
         user = await get_user(self.scope)
         print(dir(user))
-        print('Username? %s' % user.username)
-        print('Authenticated? %s' % user.is_authenticated)
-        print('Has perms? %s' % user.has_perm('wagtail.access_admin'))
-        print('Type: %s' % type(user))
-        print('__str__ %s' % user.__str__)
-        return user.is_authenticated and user.has_perm('wagtail.access_admin')
+        print("Username? %s" % user.username)
+        print("Authenticated? %s" % user.is_authenticated)
+        print("Has perms? %s" % user.has_perm("wagtail.access_admin"))
+        print("Type: %s" % type(user))
+        print("__str__ %s" % user.__str__)
+        return user.is_authenticated and user.has_perm("wagtail.access_admin")
 
     async def connect(self):
         """
@@ -53,7 +94,10 @@ class PresenceConsumer(AsyncWebsocketConsumer):
 
             await self.channel_layer.group_send(
                 self.room_group_name,
-                {"type": "send_users", "users": self.get_users_from_lock_list()},
+                {
+                    "type": "send_users",
+                    "users": self.get_users_from_lock_list(),
+                },
             )
 
             await self.accept()
