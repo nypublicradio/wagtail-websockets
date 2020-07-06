@@ -72,7 +72,7 @@ window.contentLockingVueInstance = new Vue({
     var path = window.location.pathname;
     var protocol = window.location.protocol == 'http:' ? 'ws://' : 'wss://';
     this.socket = new WebSocket(
-      protocol + window.location.host + '/ws/content_editing' + path,
+      protocol + window.location.host + '/admin/ws/content_editing' + path,
     );
 
     this.socket.onmessage = e => {
