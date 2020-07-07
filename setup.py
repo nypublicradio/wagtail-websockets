@@ -17,7 +17,7 @@ setup(
     long_description=README,
     install_requires=[
         'channels',
-        'channels_redis'
+        'channels_redis<3.0.0'
     ],
     classifiers=[
         'Environment :: Web Environment',
